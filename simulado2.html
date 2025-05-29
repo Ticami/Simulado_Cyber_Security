@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulado de Cibersegurança</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #startScreen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        #startScreen h1 {
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        .quiz-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 800px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            /* CSS para impedir a seleção de texto nas questões */
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* Internet Explorer/Edge */
+            user-select: none;         /* Padrão */
+        }
+        .question-block h3 {
+            margin-top: 0;
+            color: #555;
+            font-size: 1.1em;
+        }
+        .options label {
+            display: block;
+            margin-bottom: 8px;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        .options label:hover {
+            background-color: #e9e9e9;
+        }
+        .options input[type="radio"] {
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .correct-answer-style {
+            background-color: #d4edda !important;
+            color: #155724 !important;
+            border-color: #c3e6cb !important;
+        }
+        .incorrect-answer-style {
+            background-color: #f8d7da !important;
+            color: #721c24 !important;
+            border-color: #f5c6cb !important;
+        }
+        .inline-feedback {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .inline-feedback em {
+            display: block;
+            margin-bottom: 4px;
+        }
+        .feedback-not-answered {
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+        }
+        .feedback-incorrect-attempt {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+
+        button, .action-button {
+            display: inline-block;
+            margin: 10px 5px;
+            padding: 12px 25px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: center;
+        }
+        button:hover, .action-button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled, .action-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #timer {
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #d9534f;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        #results h2 {
+            margin-top: 0;
+        }
+        .button-container {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="startScreen">
+        <h1>Simulado: Fundamentos em Cibersegurança</h1>
+        <button id="startQuizButton" class="action-button">Iniciar Prova</button>
+    </div>
+
+    <div id="quizArea" class="quiz-container" style="display:none;">
+        <div id="timer">Tempo Restante: 50:00</div>
+        <form id="quizForm">
+            </form>
+        <div class="button-container">
+            <button type="button" id="submitButton" class="action-button">Finalizar Prova</button>
+        </div>
+        <div id="results" style="display:none;">
+            <h2>Resultados</h2>
+            <p id="score"></p>
+            <p id="overallFeedback"></p>
+            <div class="button-container">
+                <button type="button" id="retryButton" class="action-button" style="display:none;">Refazer Prova</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const originalQuizData = [
+            // ... SEU ARRAY COMPLETO DE 50 PERGUNTAS AQUI ...
+            // Exemplo (colei as 50 perguntas do seu PDF aqui):
+            {
+                question: "O que caracteriza um ataque de força bruta em sistemas computacionais?",
+                options: [
+                    "A) Utiliza engenharia social para enganar o usuário.",
+                    "B) Remove as proteções de firewall automaticamente.",
+                    "C) Realiza tentativas automáticas e sucessivas de senhas até encontrar a correta.",
+                    "D) Envia arquivos maliciosos por e-mail.",
+                    "E) Intercepta dados trafegando em redes abertas."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Qual das opções representa uma prática segura no uso de senhas?",
+                options: [
+                    "A) Utilizar senhas com informações pessoais fáceis de lembrar.",
+                    "B) Anotar a senha em um post-it e deixá-la visível.",
+                    "C) Compartilhar a senha com colegas de confiança.",
+                    "D) Reutilizar a mesma senha em todos os sistemas.",
+                    "E) Utilizar combinações únicas de letras, números e caracteres especiais."
+                ],
+                answer: 4 // E
+            },
+            {
+                question: "Qual é a diferença entre um vírus e um worm em cibersegurança?",
+                options: [
+                    "A) Um vírus se espalha sozinho, enquanto um worm precisa de interação do usuário",
+                    "B) Um worm se espalha sozinho, enquanto um vírus precisa de interação do usuário",
+                    "C) Ambos são a mesma coisa",
+                    "D) Um vírus só afeta arquivos, enquanto um worm só afeta a rede",
+                    "E) Um vírus é inofensivo, enquanto um worm é sempre perigoso"
+                ],
+                answer: 1 // B
+            },
+            {
+                question: "O que caracteriza um ataque de negação de serviço (DoS)?",
+                options: [
+                    "A) Roubos de senhas usando páginas falsas.",
+                    "B) Interceptação de tráfego criptografado em rede Wi-Fi.",
+                    "C) Modificação de dados sem permissão.",
+                    "D) Sobrecarga de um sistema para torná-lo indisponível.",
+                    "E) Espionagem de comunicações institucionais."
+                ],
+                answer: 3 // D
+            },
+            {
+                question: "Qual é o principal objetivo da criptografia em segurança digital?",
+                options: [
+                    "A) Aumentar a velocidade da conexão com a internet.",
+                    "B) Impedir o acesso de usuários à rede local.",
+                    "C) Melhorar o desempenho de aplicativos corporativos.",
+                    "D) Realizar backups automáticos em nuvem.",
+                    "E) Tornar os dados indecifráveis para quem não tem permissão de acesso."
+                ],
+                answer: 4 // E
+            },
+            {
+                question: "O que é um firewall, no contexto de segurança da informação?",
+                options: [
+                    "A) Um equipamento que armazena grandes quantidades de dados.",
+                    "B) Um sistema que permite acesso irrestrito à internet.",
+                    "C) Uma barreira que filtra e bloqueia conexões indesejadas à rede.",
+                    "D) Um antivírus com foco em redes locais.",
+                    "E) Um método para recuperar arquivos apagados por engano"
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Qual é a função principal de um servidor proxy?",
+                options: [
+                    "A) Gerar senhas aleatórias para os usuários.",
+                    "B) Servir de ponte entre o usuário e a internet, podendo filtrar acessos.",
+                    "C) Aumentar a velocidade de download de arquivos grandes.",
+                    "D) Corrigir falhas de roteamento de dados na nuvem.",
+                    "E) Armazenar dados criptografados em backup automático."
+                ],
+                answer: 1 // B
+            },
+            {
+                question: "O que significa a sigla VPN?",
+                options: [
+                    "A) Virtualized Protection Network",
+                    "B) Verified Public Network",
+                    "C) Virtual Private Network",
+                    "D) Value Protocol Network",
+                    "E) Varying Packet Node"
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Qual das opções a seguir descreve um ataque do tipo Man-in-the-Middle (MitM)?",
+                options: [
+                    "A) Redirecionamento de tráfego para sites falsos via spam.",
+                    "B) Invasão física a servidores para extrair dados.",
+                    "C) Envio de mensagens automáticas com links maliciosos.",
+                    "D) Interceptação e possível alteração da comunicação entre duas partes.",
+                    "E) Instalação de malware por pen drive infectado."
+                ],
+                answer: 3 // D
+            },
+            {
+                question: "O que é uma botnet?",
+                options: [
+                    "A) Uma rede de bots usados para fazer backup de dados.",
+                    "B) Um sistema automatizado de e-mails legítimos.",
+                    "C) Uma rede de dispositivos infectados e controlados por um invasor.",
+                    "D) Um grupo de computadores corporativos configurados em rede.",
+                    "E) Um conjunto de firewalls com autenticação de múltiplos fatores."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Qual é a principal característica de um ransomware?",
+                options: [
+                    "A) Ele infecta sistemas apenas com objetivo de espionagem.",
+                    "B) Ele realiza backups automáticos de arquivos sensíveis.",
+                    "C) Ele impede o acesso ao sistema, forçando reinicializações contínuas.",
+                    "D) Ele criptografa os dados e exige um pagamento para liberar o acesso.",
+                    "E) Ele atua apenas em dispositivos móveis."
+                ],
+                answer: 3 // D
+            },
+            {
+                question: "Como podemos definir um certificado digital no ambiente da internet?",
+                options: [
+                    "A) Um código de segurança para senhas bancárias.",
+                    "B) Um documento físico utilizado para acessar redes privadas.",
+                    "C) Um antivírus avançado utilizado por empresas.",
+                    "D) Um mecanismo eletrônico que valida a identidade de uma entidade online.",
+                    "E) Um tipo de firewall de autenticação reforçada."
+                ],
+                answer: 3 // D
+            },
+            {
+                question: "O que caracteriza um ataque de engenharia social?",
+                options: [
+                    "A) Envio de comandos maliciosos por meio de SQL.",
+                    "B) Manipulação de softwares para desativar antivírus.",
+                    "C) Engano psicológico que explora a confiança da vítima para obter informações sensíveis.",
+                    "D) Sobreposição de pacotes em uma rede para interceptar tráfego.",
+                    "E) Encriptação de arquivos com uso de técnicas de ransomware."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "O que define o princípio do menor privilégio em segurança da informação?",
+                options: [
+                    "A) Permitir que todos os usuários acessem todas as áreas do sistema.",
+                    "B) Garantir acesso apenas às funções necessárias para o papel do usuário.",
+                    "C) Utilizar múltiplas redes Wi-Fi para evitar rastreamento.",
+                    "D) Monitorar o histórico de navegação de todos os dispositivos.",
+                    "E) Compartilhar senhas de acesso com supervisores."
+                ],
+                answer: 1 // B
+            },
+            {
+                question: "Qual é a finalidade de um honeypot em um ambiente de segurança?",
+                options: [
+                    "A) Servir como sistema de backup de emergência.",
+                    "B) Criptografar senhas e logins armazenados.",
+                    "C) Isolar sistemas vulneráveis da rede principal.",
+                    "D) Atrair, registrar e estudar o comportamento de atacantes em um ambiente controlado.",
+                    "E) Agir como proxy em comunicações internas."
+                ],
+                answer: 3 // D
+            },
+            {
+                question: "Qual é o objetivo de um ataque de injeção SQL (SQL Injection)?",
+                options: [
+                    "A) Substituir o sistema de autenticação por biometria.",
+                    "B) Excluir todos os dados de backup da rede.",
+                    "C) Executar comandos maliciosos diretamente no banco de dados.",
+                    "D) Enviar spam com códigos criptografados.",
+                    "E) Redirecionar o usuário para páginas falsas sem autenticação."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Qual das alternativas representa uma forma de autenticação biométrica?",
+                options: [
+                    "A) PIN de segurança com quatro dígitos.",
+                    "B) Token físico para autenticação.",
+                    "C) Impressão digital como fator de verificação.",
+                    "D) Senha com combinação de letras e números.",
+                    "E) Código enviado por SMS."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "O que diferencia um ataque DDoS de um DoS?",
+                options: [
+                    "A) O DDoS utiliza múltiplos dispositivos distribuídos para sobrecarregar o sistema.",
+                    "B) O DDoS realiza varreduras em redes privadas antes de agir.",
+                    "C) O DDoS exige interação humana constante durante a execução.",
+                    "D) O DDoS apenas simula lentidão, sem causar impacto real.",
+                    "E) O DDoS desativa criptografias, enquanto o DoS não interfere nisso."
+                ],
+                answer: 0 // A
+            },
+            {
+                question: "Qual é o principal objetivo da autenticação de dois fatores (2FA)?",
+                options: [
+                    "A) Eliminar completamente o uso de senhas.",
+                    "B) Garantir acesso a todos os dispositivos com um único clique.",
+                    "C) Aumentar a segurança exigindo dois métodos distintos de autenticação.",
+                    "D) Ativar a autenticação apenas em horários comerciais.",
+                    "E) Reduzir o tempo de login por meio de tokens."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "O que é um rootkit em um ambiente computacional?",
+                options: [
+                    "A) Um antivírus para redes corporativas.",
+                    "B) Um software que faz backup automático dos arquivos do sistema.",
+                    "C) Um programa que concede controle oculto e privilegiado a atacantes.",
+                    "D) Um módulo de autenticação com base em reconhecimento facial.",
+                    "E) Um sistema de gerenciamento de senhas criptografadas."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Qual é o principal objetivo de um plano de resposta a incidentes de segurança?",
+                options: [
+                    "A) Melhorar o desempenho geral do sistema de rede.",
+                    "B) Coletar estatísticas de uso para relatórios mensais.",
+                    "C) Organizar e executar ações para conter e mitigar impactos de ataques.",
+                    "D) Realizar atualizações automáticas em sistemas operacionais.",
+                    "E) Corrigir erros de conexão em dispositivos móveis."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Qual é a função de um sistema de detecção de intrusões (IDS)?",
+                options: [
+                    "A) Criptografar o tráfego de rede entre dispositivos.",
+                    "B) Registrar acessos físicos ao data center.",
+                    "C) Identificar comportamentos suspeitos e alertar sobre possíveis ameaças.",
+                    "D) Garantir o backup automático dos dados armazenados.",
+                    "E) Proteger o sistema contra vírus do tipo rootkit."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "O que é um keylogger no contexto de ataques cibernéticos?",
+                options: [
+                    "A) Um firewall especializado em detectar acessos externos.",
+                    "B) Um mecanismo de dupla autenticação por biometria.",
+                    "C) Um programa que registra silenciosamente as teclas digitadas por um usuário.",
+                    "D) Um módulo que realiza verificação de integridade de arquivos.",
+                    "E) Um agente de proteção que criptografa discos em tempo real."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Qual das alternativas representa uma boa prática contra ataques de ransomware?",
+                options: [
+                    "A) Reutilizar senhas fortes em todos os sistemas.",
+                    "B) Desabilitar firewalls para aumentar a performance.",
+                    "C) Manter backups atualizados e softwares sempre corrigidos.",
+                    "D) Aceitar cookies de qualquer site para navegação rápida.",
+                    "E) Compartilhar credenciais apenas em situações emergenciais."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "O que representa um hash no contexto da segurança digital?",
+                options: [
+                    "A) Um tipo de firewall que atua por camadas.",
+                    "B) Um código de verificação de software enviado por SMS.",
+                    "C) Uma representação criptográfica fixa e irreversível de um conjunto de dados.",
+                    "D) Uma senha temporária gerada automaticamente por tokens.",
+                    "E) Uma assinatura digital que protege conexões Wi-Fi."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "O que é um ataque de spear phishing?",
+                options: [
+                    "A) Uma campanha massiva de envio de mensagens automáticas sem alvo específico.",
+                    "B) Uma variação do ransomware voltada para dados bancários.",
+                    "C) Uma fraude altamente direcionada a uma vítima específica e com dados personalizados.",
+                    "D) Uma técnica de desativação remota de antivírus.",
+                    "E) Uma infecção por links ocultos em arquivos PDF."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Qual é o papel de um sistema de prevenção de intrusões (IPS)?",
+                options: [
+                    "A) Realizar auditoria em backups armazenados em nuvem.",
+                    "B) Monitorar e bloquear ativamente atividades maliciosas na rede.",
+                    "C) Organizar permissões de acesso por função de usuário.",
+                    "D) Atualizar dispositivos com correções de segurança.",
+                    "E) Executar scripts de análise em sistemas operacionais Linux."
+                ],
+                answer: 1 // B
+            },
+            {
+                question: "O que caracteriza um ataque do tipo zero-day?",
+                options: [
+                    "A) A exploração de uma vulnerabilidade que ainda não foi descoberta pelo fabricante.",
+                    "B) A tentativa de login com múltiplas credenciais conhecidas.",
+                    "C) A execução de um worm que se propaga automaticamente.",
+                    "D) A replicação de dados em redes descentralizadas.",
+                    "E) O uso de links fraudulentos em redes sociais."
+                ],
+                answer: 0 // A
+            },
+            {
+                question: "Qual é uma boa prática ao utilizar redes Wi-Fi públicas?",
+                options: [
+                    "A) Compartilhar dados diretamente com outros usuários conectados.",
+                    "B) Utilizar VPN para criptografar todo o tráfego da conexão.",
+                    "C) Aceitar todas as permissões de navegador solicitadas.",
+                    "D) Acessar dados bancários apenas com aba anônima.",
+                    "E) Conectar-se à rede sem senha para facilitar o acesso."
+                ],
+                answer: 1 // B
+            },
+            {
+                question: "O que caracteriza um ataque de spoofing?",
+                options: [
+                    "A) Acesso remoto indevido com uso de força bruta.",
+                    "B) Envio de spam para múltiplos destinatários.",
+                    "C) Uso de identidade falsificada para enganar sistemas ou pessoas.",
+                    "D) Monitoramento de tráfego DNS em redes privadas.",
+                    "E) Bloqueio intencional de portas de rede."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "O que acontece em um ataque do tipo watering hole?",
+                options: [
+                    "A) Um hacker utiliza falha em roteadores para explorar a rede local.",
+                    "B) O atacante infecta sites legítimos que são frequentemente acessados pela vítima-alvo.",
+                    "C) Uma campanha de phishing é disparada automaticamente para empresas.",
+                    "D) Um malware é ocultado em arquivos ZIP baixados em massa.",
+                    "E) O invasor bloqueia o acesso de administradores ao painel de controle."
+                ],
+                answer: 1 // B
+            },
+            {
+                question: "O que significa DLP (Data Loss Prevention) em segurança da informação?",
+                options: [
+                    "A) Um sistema que apaga arquivos antigos para liberar espaço no disco.",
+                    "B) Um protocolo que monitora falhas em roteadores Wi-Fi.",
+                    "C) Conjunto de tecnologias que evitam vazamento de informações sensíveis.",
+                    "D) Uma ferramenta para compactar dados em backups.",
+                    "E) Um antivírus especializado em redes corporativas."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Qual é a diferença entre HTTP e HTTPS?",
+                options: [
+                    "A) O HTTP realiza compressão automática de dados, o HTTPS não.",
+                    "B) O HTTPS criptografa a comunicação entre navegador e servidor, enquanto o HTTP não.",
+                    "C) O HTTP é usado para redes privadas e HTTPS para redes públicas.",
+                    "D) O HTTP é padrão em dispositivos móveis, o HTTPS não é compatível.",
+                    "E) O HTTPS requer hardware dedicado para funcionar."
+                ],
+                answer: 1 // B
+            },
+            {
+                question: "O que é uma sandbox no contexto da segurança cibernética?",
+                options: [
+                    "A) Um tipo de firewall voltado para ambientes virtuais.",
+                    "B) Um sistema que bloqueia automaticamente conexões suspeitas.",
+                    "C) Um ambiente isolado para testar, sem afetar o sistema real.",
+                    "D) Um módulo de backup automático em nuvem.",
+                    "E) Um sistema de controle de acesso físico a servidores."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "O que caracteriza um ataque de brute force?",
+                options: [
+                    "A) Um ataque que envolve engenharia social contra funcionários da empresa.",
+                    "B) Uma tentativa de decodificar certificados SSL.",
+                    "C) Um ataque que utiliza repetidas tentativas até encontrar a combinação correta.",
+                    "D) Uma técnica para ocultar a origem real de um malware.",
+                    "E) Um método de manipulação de dados por meio de macros."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "O que é credential stuffing?",
+                options: [
+                    "A) Um ataque que criptografa dados de login e exige resgate para liberação.",
+                    "B) Um ataque em que senhas e logins previamente vazados são usados para tentar acessar outros sistemas.",
+                    "C) Uma tentativa de engenharia social com base em perguntas de segurança.",
+                    "D) Um mecanismo de verificação em duas etapas via e-mail.",
+                    "E) Uma falha na autenticação biométrica por reconhecimento facial."
+                ],
+                answer: 1 // B
+            },
+            {
+                question: "Em que consiste um ataque de sniffing?",
+                options: [
+                    "A) Captura e análise de pacotes de dados transmitidos por uma rede.",
+                    "B) Invasão por backdoors em firewalls mal configurados.",
+                    "C) Interrupção do sinal de Wi-Fi para executar spoofing.",
+                    "D) Modificação de hashes com técnicas de força bruta.",
+                    "E) Sequestro de sessões ativas via proxy."
+                ],
+                answer: 0 // A
+            },
+            {
+                question: "Qual é a finalidade de um certificado SSL?",
+                options: [
+                    "A) Aumentar a velocidade de navegação em redes públicas.",
+                    "B) Servir como antivírus contra malwares baseados em navegador.",
+                    "C) Criptografar a comunicação em conexões web seguras.",
+                    "D) Substituir firewalls por protocolos criptográficos.",
+                    "E) Habilitar conexões simultâneas entre dispositivos remotos."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "O que define o princípio da segregação de funções (SoD)?",
+                options: [
+                    "A) A criação de logs automáticos para todas as transações realizadas no sistema.",
+                    "B) A divisão de responsabilidades para evitar que uma única pessoa tenha controle total sobre processos críticos.",
+                    "C) A configuração de permissões para grupos de usuários.",
+                    "D) A separação física entre servidores de aplicação e de banco de dados.",
+                    "E) A restrição do uso de software de terceiros em ambientes corporativos."
+                ],
+                answer: 1 // B
+            },
+            {
+                question: "Em que consiste um ataque de cross-site request forgery (CSRF)?",
+                options: [
+                    "A) Um ataque que redireciona o tráfego da vítima para um site clonado.",
+                    "B) Um ataque que infecta servidores DNS com malware.",
+                    "C) Um ataque que força a vítima, sem perceber, a executar ações indesejadas em um site onde está autenticada.",
+                    "D) Um ataque de injeção de comandos em navegadores com uso de JavaScript.",
+                    "E) Um ataque que sequestra sessões ativas de e-mail."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Durante uma auditoria, foi identificado que um funcionário enviou arquivos confidenciais por e-mail externo sem permissão. Qual política de segurança poderia ter prevenido esse incidente?",
+                options: [
+                    "A) Monitoramento de uso de banda larga.",
+                    "B) Segmentação de rede por VLANs.",
+                    "C) Controle de acesso baseado em função (RBAC).",
+                    "D) Política de prevenção contra perda de dados (DLP).",
+                    "E) Implantação de certificado digital pessoal."
+                ],
+                answer: 3 // D
+            },
+            {
+                question: "Um invasor se passa por um diretor da empresa e solicita, por e-mail, uma transferência urgente para uma conta bancária. Que tipo de ataque está ocorrendo?",
+                options: [
+                    "A) Phishing técnico.",
+                    "B) Engenharia social com spoofing.",
+                    "C) Keylogger remoto.",
+                    "D) Ataque DDoS com ransomware.",
+                    "E) Vazamento de DNS."
+                ],
+                answer: 1 // B
+            },
+            {
+                question: "Durante a análise de logs, identificou-se tráfego incomum vindo de diversos IPs para um mesmo servidor em curto período. Isso pode indicar:",
+                options: [
+                    "A) Falha de DNS interno.",
+                    "B) Campanha de phishing em massa.",
+                    "C) Ataque de negação de serviço distribuído.",
+                    "D) Sincronização mal feita entre firewalls.",
+                    "E) Invasão via roteadores Wi-Fi."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Uma pequena empresa perdeu dados importantes após falha em um HD. Qual medida poderia ter minimizado o prejuízo?",
+                options: [
+                    "A) Reforçar autenticação com múltiplos fatores.",
+                    "B) Utilizar criptografia em todos os arquivos.",
+                    "C) Realizar backup regular em nuvem ou local.",
+                    "D) Ativar firewall com política mais restritiva.",
+                    "E) Monitorar todos os acessos externos via IDS."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Após clicar em um link suspeito, um usuário teve seus arquivos bloqueados e recebeu uma mensagem exigindo pagamento em criptomoedas. Esse tipo de ataque é um:",
+                options: [
+                    "A) Spyware silencioso.",
+                    "B) Rootkit com keylogger.",
+                    "C) Worm autorreplicante.",
+                    "D) Ransomware.",
+                    "E) Exploit zero-day."
+                ],
+                answer: 3 // D
+            },
+            {
+                question: "Um colaborador tem acesso a informações confidenciais que não são necessárias para seu cargo. Isso representa violação de qual princípio?",
+                options: [
+                    "A) Confidencialidade absoluta.",
+                    "B) Privilégio escalonado.",
+                    "C) Controle baseado em funções.",
+                    "D) Princípio do menor privilégio.",
+                    "E) Autenticação adaptativa."
+                ],
+                answer: 3 // D
+            },
+            {
+                question: "Após o vazamento de logins e senhas de usuários em um fórum online, qual medida pode evitar o uso dessas credenciais por atacantes?",
+                options: [
+                    "A) Utilizar backups criptografados na nuvem.",
+                    "B) Exigir VPN para acessos externos.",
+                    "C) Implementar autenticação de dois fatores (2FA).",
+                    "D) Redefinir o protocolo de e-mails internos.",
+                    "E) Instalar um firewall físico por setor."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Qual tipo de ataque é mais provável de ocorrer ao acessar uma conta bancária em uma rede Wi-Fi pública e desprotegida?",
+                options: [
+                    "A) Ataque de força bruta.",
+                    "B) Man-in-the-Middle (MitM).",
+                    "C) Invasão por rootkit.",
+                    "D) SQL Injection.",
+                    "E) Phishing via SMS."
+                ],
+                answer: 1 // B
+            },
+            {
+                question: "Durante um treinamento, os colaboradores foram orientados a não abrir anexos de e-mails desconhecidos nem clicar em links suspeitos. Essa ação faz parte de qual prática?",
+                options: [
+                    "A) Treinamento técnico para suporte.",
+                    "B) Análise de logs e sistemas.",
+                    "C) Educação em segurança cibernética.",
+                    "D) Criação de firewalls lógicos.",
+                    "E) Instalação de antivírus empresariais."
+                ],
+                answer: 2 // C
+            },
+            {
+                question: "Um desenvolvedor deixou vulnerável o campo de login da aplicação web, permitindo comandos SQL diretamente. Isso representa qual tipo de ataque?",
+                options: [
+                    "A) Cross-site scripting (XSS).",
+                    "B) SQL Injection.",
+                    "C) Buffer overflow.",
+                    "D) Credential stuffing.",
+                    "E) Brute force login."
+                ],
+                answer: 1 // B
+            }
+        ];
+
+        let currentQuizData = [];
+        let timeLeft;
+        let timerInterval;
+        let quizSubmitted = false;
+
+        let startScreenEl, quizAreaEl, startQuizButtonEl, quizFormEl,
+            resultsContainerEl, scoreElementEl, overallFeedbackElementEl,
+            timerElementEl, submitButtonEl, retryButtonEl;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function initializeQuiz() {
+            startScreenEl.style.display = 'none';
+            quizAreaEl.style.display = 'block';
+            resultsContainerEl.style.display = 'none';
+            retryButtonEl.style.display = 'none';
+            submitButtonEl.style.display = 'inline-block';
+            submitButtonEl.disabled = false;
+
+            currentQuizData = [...originalQuizData];
+            shuffleArray(currentQuizData);
+
+            quizFormEl.innerHTML = '';
+            buildQuiz();
+
+            timeLeft = 50 * 60;
+            quizSubmitted = false;
+            if (timerInterval) clearInterval(timerInterval);
+            startTimer();
+            window.scrollTo(0, 0);
+        }
+
+        function buildQuiz() {
+            currentQuizData.forEach((currentQuestion, questionNumber) => {
+                const questionBlock = document.createElement('div');
+                questionBlock.classList.add('question-block');
+                questionBlock.innerHTML = `<h3>${questionNumber + 1}. ${currentQuestion.question}</h3>`;
+
+                const optionsDiv = document.createElement('div');
+                optionsDiv.classList.add('options');
+
+                currentQuestion.options.forEach((option, index) => {
+                    const label = document.createElement('label');
+                    label.id = `q${questionNumber}_opt${index}_label`;
+                    label.setAttribute('for', `q${questionNumber}_opt${index}`);
+
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = `question${questionNumber}`;
+                    input.value = index;
+                    input.id = `q${questionNumber}_opt${index}`;
+
+                    label.appendChild(input);
+                    label.appendChild(document.createTextNode(" " + option));
+                    optionsDiv.appendChild(label);
+                });
+                questionBlock.appendChild(optionsDiv);
+
+                const inlineFeedbackDiv = document.createElement('div');
+                inlineFeedbackDiv.classList.add('inline-feedback');
+                inlineFeedbackDiv.id = `feedback_q${questionNumber}`;
+                questionBlock.appendChild(inlineFeedbackDiv);
+
+                quizFormEl.appendChild(questionBlock);
+            });
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                const minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                seconds = seconds < 10 ? '0' + seconds : seconds;
+                timerElementEl.textContent = `Tempo Restante: ${minutes}:${seconds}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerElementEl.textContent = "Tempo Esgotado!";
+                    if (!quizSubmitted) {
+                        finalizeQuiz(true);
+                    }
+                }
+                if (timeLeft > 0) {
+                   timeLeft--;
+                }
+            }, 1000);
+        }
+
+        function finalizeQuiz(timeUp = false) {
+            if (quizSubmitted) return;
+            quizSubmitted = true;
+
+            clearInterval(timerInterval);
+            if (submitButtonEl) submitButtonEl.disabled = true;
+
+            let score = 0;
+            let answeredAll = true;
+
+            currentQuizData.forEach((currentQuestion, questionNumber) => {
+                const answerInputs = document.getElementsByName(`question${questionNumber}`);
+                let userAnswer = -1;
+
+                answerInputs.forEach(input => {
+                    if (input.checked) {
+                        userAnswer = parseInt(input.value);
+                    }
+                });
+
+                // console.log(`Q${questionNumber + 1}: UserAnswer=${userAnswer}, CorrectAnswer=${currentQuestion.answer}, Iguais? ${userAnswer === currentQuestion.answer}`);
+
+                answerInputs.forEach(input => {
+                    input.disabled = true;
+                });
+
+                const correctAnswer = currentQuestion.answer;
+                const optionLabels = [];
+                for (let i = 0; i < currentQuestion.options.length; i++) {
+                    const labelEl = document.getElementById(`q${questionNumber}_opt${i}_label`);
+                    if (labelEl) {
+                        optionLabels.push(labelEl);
+                    } else {
+                        optionLabels.push(null);
+                    }
+                }
+
+                const inlineFeedbackDiv = document.getElementById(`feedback_q${questionNumber}`);
+                if (inlineFeedbackDiv) {
+                    inlineFeedbackDiv.innerHTML = '';
+                    inlineFeedbackDiv.classList.remove('feedback-incorrect-attempt', 'feedback-not-answered');
+                }
+
+                if (userAnswer === -1) {
+                    answeredAll = false;
+                }
+
+                if (userAnswer === correctAnswer) {
+                    score++;
+                    if (optionLabels[userAnswer]) {
+                        optionLabels[userAnswer].classList.add('correct-answer-style');
+                    }
+                } else {
+                    let feedbackText = '';
+                    if (userAnswer !== -1) { // Respondeu, mas incorretamente
+                        if (optionLabels[userAnswer]) {
+                            optionLabels[userAnswer].classList.add('incorrect-answer-style');
+                        }
+                        if (currentQuestion.options[userAnswer] !== undefined) {
+                            feedbackText += `<em>Sua resposta: ${currentQuestion.options[userAnswer]}</em>`;
+                        } else {
+                            feedbackText += `<em>Sua resposta: Opção inválida (índice ${userAnswer})</em>`;
+                        }
+                        if(inlineFeedbackDiv) inlineFeedbackDiv.classList.add('feedback-incorrect-attempt');
+                    } else { // Não respondeu
+                        feedbackText += `<em>Sua resposta: Não respondida</em>`;
+                        if(inlineFeedbackDiv) inlineFeedbackDiv.classList.add('feedback-not-answered');
+                    }
+
+                    if (optionLabels[correctAnswer]) {
+                        optionLabels[correctAnswer].classList.add('correct-answer-style');
+                    }
+                    if (currentQuestion.options[correctAnswer] !== undefined) {
+                         feedbackText += `<br><em>Resposta correta: ${currentQuestion.options[correctAnswer]}</em>`;
+                    } else {
+                        feedbackText += `<br><em>Resposta correta: Opção correta inválida (índice ${correctAnswer})</em>`;
+                    }
+
+                    if (inlineFeedbackDiv) {
+                        inlineFeedbackDiv.innerHTML = feedbackText;
+                    }
+                }
+            });
+
+            const percentage = (currentQuizData.length > 0) ? (score / currentQuizData.length) * 100 : 0;
+            scoreElementEl.textContent = `Sua pontuação: ${score} de ${currentQuizData.length} (${percentage.toFixed(2)}%)`;
+
+            if (timeUp && !answeredAll) {
+                overallFeedbackElementEl.textContent = "Tempo esgotado! Algumas questões não foram respondidas.";
+            } else if (!answeredAll) {
+                overallFeedbackElementEl.textContent = "Algumas questões não foram respondidas. Verifique o feedback em cada questão.";
+            } else if (score === currentQuizData.length && currentQuizData.length > 0) {
+                overallFeedbackElementEl.textContent = "Parabéns! Você acertou todas as questões!";
+            } else {
+                overallFeedbackElementEl.textContent = "Verifique o feedback em cada questão para ver os detalhes.";
+            }
+
+            resultsContainerEl.style.display = 'block';
+            retryButtonEl.style.display = 'inline-block';
+            resultsContainerEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function returnToStartScreen() {
+            quizAreaEl.style.display = 'none';
+            startScreenEl.style.display = 'flex';
+            if (timerInterval) clearInterval(timerInterval);
+            if (timerElementEl) timerElementEl.textContent = 'Tempo Restante: 50:00';
+        }
+
+        function onDOMLoaded() {
+            startScreenEl = document.getElementById('startScreen');
+            quizAreaEl = document.getElementById('quizArea');
+            startQuizButtonEl = document.getElementById('startQuizButton');
+            quizFormEl = document.getElementById('quizForm');
+            resultsContainerEl = document.getElementById('results');
+            scoreElementEl = document.getElementById('score');
+            overallFeedbackElementEl = document.getElementById('overallFeedback');
+            timerElementEl = document.getElementById('timer');
+            submitButtonEl = document.getElementById('submitButton');
+            retryButtonEl = document.getElementById('retryButton');
+
+            if (!startQuizButtonEl || !submitButtonEl || !retryButtonEl || !quizFormEl || !quizAreaEl ) {
+                console.error("ERRO CRÍTICO: Um ou mais elementos HTML essenciais não foram encontrados. Verifique os IDs.");
+                alert("ERRO CRÍTICO: Falha ao carregar componentes da página. Verifique o console.");
+                return;
+            }
+
+            // Impedir clique direito na área do quiz
+            quizAreaEl.addEventListener('contextmenu', function(event) {
+                event.preventDefault();
+            });
+
+            // Impedir Ctrl+C / Cmd+C (tentativa, pode ser contornado)
+            document.addEventListener('keydown', function(event) {
+                if (quizAreaEl.style.display === 'block') { // Só se o quiz estiver visível
+                    if ((event.ctrlKey || event.metaKey) && (event.key === 'c' || event.key === 'C')) {
+                        event.preventDefault();
+                        // console.log("Cópia desabilitada via atalho.");
+                    }
+                }
+            });
+
+
+            startQuizButtonEl.addEventListener('click', initializeQuiz);
+            submitButtonEl.addEventListener('click', () => finalizeQuiz(false));
+            retryButtonEl.addEventListener('click', returnToStartScreen);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', onDOMLoaded);
+        } else {
+            onDOMLoaded();
+        }
+    </script>
+
+</body>
+</html>
